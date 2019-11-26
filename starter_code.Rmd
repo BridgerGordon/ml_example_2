@@ -10,6 +10,7 @@ library(fs)
 library(gt)
 library(tidymodels)
 library(tidyverse)
+library(rsample)
 ```
 
 
@@ -127,4 +128,60 @@ metrics(x_2, truth = dvote, estimate = pred_dvote) %>%
 # Much better! Repo before class.
 
 ```
+
+```{r}
+
+# Do a logistic regression
+logistic_reg() %>%
+  #Set the type of regression (GLM is default)
+  set_engine("glm") %>%
+  #Set the actual parameters of the model that it's fitting
+  fit(dvote ~ gender + party + state + office, data = clean) %>%
+  #Predict using the model on the dataset
+  predict(clean) %>%
+  bind_cols(clean) %>%
+  metrics(truth = dvote, estimate = .pred_class)%>%
+  gt() %>% 
+  tab_header("Model 3 Evaluation on All Data")
+
+```
+
+
+
+```{r}
+
+split <- initial_split(clean, prop = 0.01)
+
+training <- training(split)
+testing <- testing(split)
+
+# Do a logistic regression -- on just the 1% training data
+logistic_reg() %>%
+  #Set the type of regression (GLM is default)
+  set_engine("glm") %>%
+  #Set the actual parameters of the model that it's fitting using our training data
+  fit(dvote ~ gender + party + state + office, data = training) %>%
+  #Predict using the model on the testing dataset
+  predict(training) %>%
+  bind_cols(training) %>%
+  metrics(truth = dvote, estimate = .pred_class)%>%
+  gt() %>% 
+  tab_header("Model 4 Evaluation on All Data")
+
+# Do a logistic regression -- using training data then testing it on testing data
+logistic_reg() %>%
+  #Set the type of regression (GLM is default)
+  set_engine("glm") %>%
+  #Set the actual parameters of the model that it's fitting using our training data
+  fit(dvote ~ gender + party + state + office, data = training) %>%
+  #Predict using the model on the testing dataset
+  predict(testing) %>%
+  bind_cols(testing) %>%
+  metrics(truth = dvote, estimate = .pred_class)%>%
+  gt() %>% 
+  tab_header("Model 5 Evaluation on All Data")
+  
+
+```
+
 
